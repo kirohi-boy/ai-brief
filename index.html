@@ -561,7 +561,8 @@
       { title: "Meta、LLaMA 4を正式リリース", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Meta AI Blog", source_url: "https://ai.meta.com/blog/", summary: "MetaがオープンソースLLM「LLaMA 4」を正式公開。前世代より推論速度が2倍向上し、商用利用も無償で可能。OpenAI・Anthropicへの対抗軸として企業の選択肢が広がる。", learn: "LLaMA 4の商用利用条件を確認し、自社サービスへの組み込みコスト試算を行う" },
       { title: "Microsoft Copilot、Excel自動化を強化", importance: "中", topic: "AI開発ツール", date: "2026年4月23日", source: "Microsoft Blog", source_url: "https://blogs.microsoft.com/", summary: "Microsoft CopilotがExcelの高度な自動化機能を追加。複雑な集計・グラフ作成・レポート生成をチャットで指示できるようになり、ビジネス現場での活用が一気に広がる見込み。", learn: "日常のExcel作業をCopilotに任せるワークフローを試し、週次レポート作成の時間を計測してみる" },
       { title: "Apple、iOS 19でAI機能を大幅拡充", importance: "中", topic: "AI×ビジネス", date: "2026年4月22日", source: "The Verge", source_url: "https://www.theverge.com/apple", summary: "AppleがiOS 19でオンデバイスAI処理を強化すると発表。プライバシーを保ちながらメール・メモ・カレンダーをAIが自動整理する機能が追加される予定で、個人生産性が向上する。", learn: "iOS 19リリース後にApple Intelligenceの業務活用方法を調査し、チームへの導入を検討する" },
-      { title: "Google Gemini 2.5、コーディング精度で首位", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Google DeepMind", source_url: "https://deepmind.google/", summary: "GoogleのGemini 2.5がコーディングベンチマークでGPT-4oを上回り首位を獲得。特に長いコンテキストの理解と多言語対応が評価されており、開発者向けツールとしての採用が加速している。", learn: "現在利用しているAIツールとGemini 2.5を比較し、用途別に最適なモデルを使い分けるガイドを作成する" }
+      { title: "Google Gemini 2.5、コーディング精度で首位", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Google DeepMind", source_url: "https://deepmind.google/", summary: "GoogleのGemini 2.5がコーディングベンチマークでGPT-4oを上回り首位を獲得。特に長いコンテキストの理解と多言語対応が評価されており、開発者向けツールとしての採用が加速している。", learn: "現在利用しているAIツールとGemini 2.5を比較し、用途別に最適なモデルを使い分けるガイドを作成する" },
+      { title: "X（旧Twitter）、Grok 3を企業向け提供開始", importance: "中", topic: "AI×ビジネス", date: "2026年4月23日", source: "Reuters", source_url: "https://www.reuters.com/technology/artificial-intelligence/", summary: "XがGrok 3の企業向けAPIを正式公開。リアルタイムのX上のデータを学習に活用できる点が特徴で、SNSマーケティング・トレンド分析・BizDev情報収集での活用が期待されている。", learn: "Grok 3のAPIを使ったSNSトレンド分析ツールの可能性を検討し、自社のマーケティング戦略に組み込めるか試算する" }
     ],
     learningRecommendations: [
       "「AIエージェント」を30分で理解する：AutoGPT・Claude Agent・ChatGPT Actionsの違いを図解でキャッチアップ",
@@ -569,6 +570,50 @@
       "このアプリをGitHubで公開する：実装経験が「AIを使いこなせるBizDev人材」の証明になる"
     ]
   };
+
+  // APIリクエスト共通関数
+  async function callAPI(apiKey, messages, useWebSearch) {
+    const body = {
+      model: 'claude-sonnet-4-5',
+      max_tokens: 4000,
+      messages
+    };
+    if (useWebSearch) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `APIエラー (${res.status})`);
+    }
+    return res.json();
+  }
+
+  // テキストブロック抽出
+  function extractText(data) {
+    const block = data.content.filter(b => b.type === 'text').pop();
+    return block ? block.text.trim() : '';
+  }
+
+  // JSON安全パース
+  function safeParseJSON(raw) {
+    let str = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+    if (!str.startsWith('{')) {
+      const m = str.match(/\{[\s\S]*\}/);
+      if (m) str = m[0];
+      else throw new Error('JSONの解析に失敗しました');
+    }
+    return JSON.parse(str);
+  }
 
   async function fetchBrief() {
     clearError();
@@ -586,109 +631,69 @@
       return;
     }
 
-    // ローディングメッセージを段階的に更新（長時間待機への対応）
-    const loadingMessages = [
-      ['🔍 Web検索でAIニュースを収集中...', '最新記事を10件分探しています（30〜90秒かかります）'],
-      ['📰 記事の内容を読み込み中...', 'Anthropic・OpenAI・Google等の情報を確認しています'],
-      ['✍️ 要約・分析中...', 'ビジネス視点で重要度を判定しています'],
-      ['🎯 学習レコメンドを生成中...', 'もうすぐ完了します'],
-    ];
-    let msgIdx = 0;
-    const msgTimer = setInterval(() => {
-      if (msgIdx < loadingMessages.length - 1) msgIdx++;
-      document.getElementById('loadingText').textContent = loadingMessages[msgIdx][0];
-      document.getElementById('loadingSub').textContent = loadingMessages[msgIdx][1];
-    }, 20000);
-
     const today = now.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
-    const prompt = `あなたはAI業界のエキスパートアナリストです。
-Web検索ツールを使って、今日（${today}）時点の本物の最新AIニュースを調査し、10件選定してください。
-
-検索すべきトピック: ${topics.join('、')}
-
-【検索の指示】
-- 各トピックについて実際にWeb検索を複数回行い、幅広く記事を収集してください
-- 対象期間：今日（${today}）と昨日の2日間以内に公開された記事のみを対象にしてください
-- 2日以上前の記事は除外してください。AIは変化が速いため最新2日間の情報が重要です
-- 架空の記事は絶対に作らないでください。必ず検索結果から実在する記事のみ使ってください
-- 2日以内の記事が10件に満たない場合は、見つかった件数のみ返してください
-
-【選定の優先順位】
-以下の優先順位で10件を選んでください：
-1. 最優先：Anthropic（Claude）・OpenAI（ChatGPT）・Google（Gemini）に関するニュース
-2. 次点：Meta（LLaMA）・Microsoft（Copilot）・Apple・Amazon・Xに関するAIニュース
-3. その他：選択されたトピックに関する影響度の高いニュース全般
-
-【重複排除ルール】
-- 10件の中で同じ出来事・発表・トピックを扱ったニュースは1件のみにすること
-- 類似した内容のニュースが複数ある場合は最も情報量が多い記事1件を選ぶこと
-- 異なる会社・製品・出来事のニュースを幅広くカバーすること
-
-【出力形式】検索完了後、以下のJSON形式のみで回答してください（前後の説明・マークダウン記法不要）:
-{
-  "summary": "今日のAI全体の動向を3〜4文で（ビジネス視点で重要なことを中心に）",
-  "news": [
-    {
-      "title": "ニュースタイトル（30文字以内・日本語）",
-      "importance": "高/中/低",
-      "topic": "カテゴリ名",
-      "date": "記事の公開日（YYYY年MM月DD日形式）",
-      "source": "メディア名",
-      "source_url": "記事の実際のURL",
-      "summary": "2〜3文の要約（なぜ重要か・何が変わるかをビジネス視点で）",
-      "learn": "このニュースがシゲさんの生活・仕事にどう関わりそうか（1〜2文・具体的に）"
-    }
-  ],
-  "learningRecommendations": ["今日優先して学ぶべきこと（具体的なアクション形式）"]
-}
-newsは10件、learningRecommendationsは3件。
-
-【重要】返答は必ず { から始まり } で終わるJSONのみにしてください。
-「検索結果を整理し」「以下にまとめます」などの前置き文章は絶対に入れないでください。
-JSONの前後に文章・説明・マークダウンを一切含めないでください。`;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          max_tokens: 4000,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
+      // ── STEP 1: Web検索でニュース記事を収集 ──
+      document.getElementById('loadingText').textContent = '🔍 Web検索でAIニュースを収集中...';
+      document.getElementById('loadingSub').textContent = '最新記事を探しています（約30秒）';
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `APIエラー (${res.status})`);
-      }
+      const searchPrompt = `今日（${today}）と昨日の2日間に公開された最新AIニュースをWeb検索で10件収集してください。
 
-      const data = await res.json();
-      const textBlock = data.content.filter(b => b.type === 'text').pop();
-      if (!textBlock) throw new Error('レスポンスにテキストが含まれていません');
-      const raw = textBlock.text.trim();
-      // Step1: コードブロック記法を除去
-      let jsonStr = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
-      // Step2: {から始まらない場合（前置き文章が混入）、JSON部分だけ抽出
-      if (!jsonStr.startsWith('{')) {
-        const match = jsonStr.match(/\{[\s\S]*\}/);
-        if (match) jsonStr = match[0];
-        else throw new Error('JSONの取得に失敗しました。再度お試しください。');
-      }
-      clearInterval(msgTimer);
-      renderResults(JSON.parse(jsonStr), false);
+優先順位：
+1. Anthropic・OpenAI・Google（Gemini）のニュース
+2. Meta・Microsoft・Apple・Amazon・XのAIニュース
+3. その他AI業界の重要ニュース
+
+各記事について以下を調べてください：タイトル、URL、公開日、メディア名、記事の内容
+
+同じ出来事のニュースは1件だけ選んでください。架空の記事は絶対に作らないでください。
+
+見つかった記事を箇条書きでまとめてください。`;
+
+      const searchData = await callAPI(apiKey, [{ role: 'user', content: searchPrompt }], true);
+      const searchResult = extractText(searchData);
+
+      if (!searchResult) throw new Error('ニュースの収集に失敗しました。再度お試しください。');
+
+      // ── STEP 2: 収集結果をJSON化 ──
+      document.getElementById('loadingText').textContent = '✍️ 要約・分析中...';
+      document.getElementById('loadingSub').textContent = 'ビジネス視点で整理しています（約20秒）';
+
+      const formatPrompt = `以下のAIニュース一覧を分析して、JSONに整形してください。
+
+【収集されたニュース】
+${searchResult}
+
+【出力形式】{ から始まり } で終わるJSONのみ返してください。前置き文章・説明・マークダウン不要：
+{
+  "summary": "今日のAI全体の動向を3〜4文で（ビジネス視点）",
+  "news": [
+    {
+      "title": "タイトル（30文字以内・日本語）",
+      "importance": "高/中/低",
+      "topic": "カテゴリ名",
+      "date": "公開日（YYYY年MM月DD日）",
+      "source": "メディア名",
+      "source_url": "記事のURL",
+      "summary": "2〜3文の要約（なぜ重要か・何が変わるか）",
+      "learn": "シゲさんの生活・仕事への影響（1〜2文・具体的に）"
+    }
+  ],
+  "learningRecommendations": ["今日学ぶべきこと（具体的なアクション）"]
+}
+newsは最大10件、learningRecommendationsは3件。必ずJSONのみ返してください。`;
+
+      const formatData = await callAPI(apiKey, [{ role: 'user', content: formatPrompt }], false);
+      const formatResult = extractText(formatData);
+      const parsed = safeParseJSON(formatResult);
+
+      renderResults(parsed, false);
+
     } catch(e) {
-      clearInterval(msgTimer);
       setLoading(false);
-      // タイムアウトの場合は分かりやすいメッセージに変換
       const msg = e.message.includes('Failed to fetch')
-        ? '通信がタイムアウトしました。処理に時間がかかりすぎています。再度「ブリーフィングを生成」を押してください。'
+        ? '通信がタイムアウトしました。再度「ブリーフィングを生成」を押してください。'
         : 'エラーが発生しました: ' + e.message;
       showError(msg);
     }

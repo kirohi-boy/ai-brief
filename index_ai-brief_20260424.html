@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Intelligence Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --surface2: #f0f0eb;
+      --surface3: #e8e8e2;
+      --accent: #2563a8;
+      --accent-light: #e8f0fa;
+      --accent2: #7c3aed;
+      --danger: #c0392b;
+      --danger-light: #fdf0ef;
+      --warning: #b45309;
+      --warning-light: #fef3e2;
+      --text: #1a1a1a;
+      --text-mid: #444444;
+      --text-dim: #888888;
+      --border: #e0e0d8;
+      --border-strong: #c8c8c0;
+      --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+
+    .logo-mark {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 800;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.01em;
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .date-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px; color: var(--text-dim);
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+
+    .sidebar-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+
+    .input-wrap { position: relative; }
+
+    .key-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 36px 9px 12px;
+      font-size: 12px;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: var(--text); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .key-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,168,0.1);
+      background: white;
+    }
+
+    .key-input::placeholder { color: var(--text-dim); font-size: 11px; }
+
+    .toggle-vis {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim); font-size: 14px;
+    }
+
+    .topics-grid { display: flex; flex-direction: column; gap: 6px; }
+
+    .topic-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px;
+      border-radius: 7px; border: 1px solid var(--border);
+      background: var(--surface2); cursor: pointer;
+      transition: all 0.15s;
+      font-size: 12px; color: var(--text-mid);
+      user-select: none;
+    }
+
+    .topic-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+    .topic-chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+    .topic-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%; background: var(--border-strong);
+      flex-shrink: 0; transition: background 0.15s;
+    }
+
+    .topic-chip.active .topic-dot { background: var(--accent); }
+
+    .gen-btn {
+      width: 100%; padding: 11px;
+      background: var(--accent); border: none; border-radius: 8px;
+      color: white; font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .gen-btn:hover { background: #1d4f8a; box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+    .gen-btn:active { transform: translateY(0); }
+    .gen-btn:disabled { background: var(--text-dim); cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .error-msg {
+      display: none;
+      background: var(--danger-light);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 12px; color: var(--danger); line-height: 1.5;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ── MAIN ── */
+    .main { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; overflow-x: auto; }
+
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 80px 20px;
+      color: var(--text-dim); gap: 12px;
+    }
+
+    .empty-icon { font-size: 40px; opacity: 0.35; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text-mid); }
+    .empty-sub { font-size: 13px; max-width: 280px; line-height: 1.75; }
+
+    .loading-state {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 80px 20px; gap: 16px; text-align: center;
+    }
+
+    .loading-state.visible { display: flex; }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--text-mid); }
+    .loading-sub { font-size: 12px; color: var(--text-dim); }
+
+    /* Results */
+    #results { display: none; flex-direction: column; gap: 24px; }
+    #results.visible { display: flex; }
+
+    .results-header { display: flex; align-items: center; justify-content: space-between; }
+
+    .results-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+
+    .results-meta { display: flex; align-items: center; gap: 10px; }
+
+    .demo-badge {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--accent-light); color: var(--accent);
+      border: 1px solid rgba(37,99,168,0.2);
+    }
+
+    .refresh-btn {
+      background: white; border: 1px solid var(--border);
+      border-radius: 7px; padding: 5px 14px;
+      font-size: 12px; color: var(--text-mid); cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.15s;
+    }
+
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+    /* Summary */
+    .summary-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px;
+      box-shadow: var(--shadow); border-left: 4px solid var(--accent);
+    }
+
+    .summary-label {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 8px;
+    }
+
+    .summary-text { font-size: 14px; line-height: 1.85; color: var(--text-mid); }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+    }
+
+    /* Horizontal scroll on small screens */
+    .table-scroll { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 860px; }
+
+    thead { background: var(--surface2); border-bottom: 2px solid var(--border-strong); }
+
+    thead th {
+      padding: 12px 16px; text-align: left;
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-dim); white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      animation: rowFade 0.4s ease both;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafaf7; }
+
+    @keyframes rowFade {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    td { padding: 16px; vertical-align: top; line-height: 1.65; }
+
+    /* No. */
+    .col-no { width: 44px; text-align: center; }
+
+    .no-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    /* 重要度 */
+    .col-imp { width: 72px; text-align: center; }
+
+    .imp-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 700;
+      font-family: 'Syne', sans-serif; white-space: nowrap;
+    }
+
+    .imp-high { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(192,57,43,0.2); }
+    .imp-med  { background: var(--warning-light); color: var(--warning); border: 1px solid rgba(180,83,9,0.2); }
+    .imp-low  { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+
+    /* AIジャンル */
+    .col-genre { width: 108px; }
+
+    .genre-tag {
+      display: inline-block; padding: 3px 9px; border-radius: 5px;
+      font-size: 11px; font-weight: 500; white-space: nowrap;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text-mid);
+    }
+
+    /* タイトル */
+    .col-title { width: 160px; }
+    .cell-title { font-weight: 700; font-size: 13px; color: var(--text); line-height: 1.5; }
+
+    /* 概要 */
+    .col-summary { min-width: 200px; }
+    .cell-summary { color: var(--text-mid); font-size: 12.5px; line-height: 1.8; }
+
+    /* 日付 */
+    .col-date { width: 96px; }
+    .cell-date { color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+
+    /* ニュース元 */
+    .col-source { width: 116px; }
+
+    .source-link {
+      color: var(--accent); text-decoration: none;
+      font-size: 12px; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px;
+      border-bottom: 1px solid rgba(37,99,168,0.3); padding-bottom: 1px;
+      transition: border-color 0.15s; word-break: break-all;
+    }
+
+    .source-link:hover { border-color: var(--accent); }
+    .source-plain { color: var(--text-mid); font-size: 12px; }
+
+    /* 生活・仕事への関わり */
+    .col-impact { min-width: 190px; }
+
+    .impact-box {
+      background: var(--accent-light); border-radius: 6px;
+      padding: 8px 10px; font-size: 12px; color: #1a4a80;
+      line-height: 1.7; border-left: 3px solid var(--accent);
+    }
+
+    /* ── LEARNING ── */
+    .learning-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow);
+    }
+
+    .learning-header {
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .learning-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .learning-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .learning-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      font-size: 13px; line-height: 1.65; color: var(--text-mid);
+    }
+
+    .learning-num {
+      min-width: 22px; height: 22px;
+      background: var(--accent); color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .main { padding: 16px; }
+      .topbar { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">AI</div>
+    <div class="logo-text">Intelligence <span>Brief</span></div>
+  </div>
+  <div class="date-pill" id="dateBadge">読み込み中...</div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-label">Claude API Key</div>
+      <div class="input-wrap">
+        <input type="password" class="key-input" id="apiKeyInput"
+          placeholder="空欄のままDEMO確認できます" />
+        <button class="toggle-vis" onclick="toggleKey()">👁</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">注目トピック（複数選択可）</div>
+      <div class="topics-grid">
+        <div class="topic-chip active" data-topic="LLM・基盤モデル"><span class="topic-dot"></span>LLM・基盤モデル</div>
+        <div class="topic-chip active" data-topic="AI×ビジネス"><span class="topic-dot"></span>AI×ビジネス</div>
+        <div class="topic-chip active" data-topic="AI開発ツール"><span class="topic-dot"></span>AI開発ツール</div>
+        <div class="topic-chip" data-topic="画像・動画生成"><span class="topic-dot"></span>画像・動画生成</div>
+        <div class="topic-chip" data-topic="エージェント・自動化"><span class="topic-dot"></span>エージェント・自動化</div>
+        <div class="topic-chip" data-topic="規制・倫理"><span class="topic-dot"></span>規制・倫理</div>
+        <div class="topic-chip" data-topic="研究論文"><span class="topic-dot"></span>研究論文</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="gen-btn" id="fetchBtn" onclick="fetchBrief()">⚡ ブリーフィングを生成</button>
+      <div class="error-msg" id="errorBox"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">今日のAI情報を取得しましょう</div>
+      <div class="empty-sub">左のトピックを選んでボタンを押すと、最新のAIニュースを一覧で表示します。APIキー未入力でもDEMOで確認できます。</div>
+    </div>
+
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">AI情報を収集・分析中...</div>
+      <div class="loading-sub" id="loadingSub">Claudeが最新動向をキャッチアップしています</div>
+    </div>
+
+    <div id="results">
+      <div class="results-header">
+        <div class="results-title">📰 今日のAIニュース一覧</div>
+        <div class="results-meta">
+          <span class="demo-badge" id="demoBadge" style="display:none;">🔵 DEMOモード</span>
+          <button class="refresh-btn" onclick="fetchBrief()">↺ 再生成</button>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">📡 今日のAIトレンド サマリー</div>
+        <div class="summary-text" id="summaryText"></div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-no">No.</th>
+                <th class="col-imp">重要度</th>
+                <th class="col-genre">AIジャンル</th>
+                <th class="col-title">タイトル</th>
+                <th class="col-summary">概要</th>
+                <th class="col-date">日付</th>
+                <th class="col-source">ニュース元</th>
+                <th class="col-impact">生活・仕事への関わり</th>
+              </tr>
+            </thead>
+            <tbody id="newsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="learning-card">
+        <div class="learning-header">🎯 シゲさんへの学習レコメンド</div>
+        <ul class="learning-list" id="learningList"></ul>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const now = new Date();
+  document.getElementById('dateBadge').textContent =
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+
+  document.querySelectorAll('.topic-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('active'));
+  });
+
+  function toggleKey() {
+    const inp = document.getElementById('apiKeyInput');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  function getTopics() {
+    return [...document.querySelectorAll('.topic-chip.active')].map(c => c.dataset.topic);
+  }
+
+  function setLoading(on, isDemo = false) {
+    document.getElementById('loadingState').classList.toggle('visible', on);
+    if (on) document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('results').style.display = on ? 'none' : '';
+    document.getElementById('fetchBtn').disabled = on;
+    document.getElementById('loadingText').textContent =
+      isDemo ? 'DEMOデータを読み込み中...' : 'AI情報を収集・分析中...';
+    document.getElementById('loadingSub').textContent =
+      isDemo ? 'サンプルコンテンツで品質を確認できます' : 'Claudeが最新動向をキャッチアップしています';
+  }
+
+  function showError(msg) {
+    const b = document.getElementById('errorBox'); b.textContent = msg; b.classList.add('visible');
+  }
+
+  function clearError() { document.getElementById('errorBox').classList.remove('visible'); }
+
+  function impClass(level) {
+    if (!level) return 'imp-med';
+    const l = level.toLowerCase();
+    if (l.includes('高') || l.includes('high')) return 'imp-high';
+    if (l.includes('低') || l.includes('low')) return 'imp-low';
+    return 'imp-med';
+  }
+
+  function impLabel(level) {
+    if (!level) return '★ 注目';
+    const l = level.toLowerCase();
+    if (l.includes('高') || l.includes('high')) return '🔥 必読';
+    if (l.includes('低') || l.includes('low')) return '　情報';
+    return '★ 注目';
+  }
+
+  const DEMO_DATA = {
+    summary: "本日のAI業界は、GoogleとOpenAIによる大型モデルアップデートが相次ぎ、特にビジネス向けエージェント機能の強化が顕著です。国内でも大手企業のAI導入が加速しており、BizDev・事業開発領域でのAI活用事例が急増しています。規制面ではEU AI Actの施行準備が最終段階に入り、グローバルビジネスへの影響が現実味を帯びてきました。",
+    news: [
+      { title: "Claude 4、エージェント機能を大幅強化", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Anthropic Blog", source_url: "https://www.anthropic.com/news", summary: "AnthropicがClaude 4シリーズの新バージョンを発表。複数のツールを自律的に組み合わせて複雑なタスクを実行できる「エージェントモード」が実用レベルに到達。営業・マーケ・BizDev業務の自動化が現実的な選択肢になりつつある。", learn: "BizDev・営業の定型業務をAIエージェントに任せる具体的な業務リストを作り、上司への提案資料に落とし込む" },
+      { title: "OpenAI、法人プランを最大30%値下げ", importance: "高", topic: "AI×ビジネス", date: "2026年4月23日", source: "TechCrunch", source_url: "https://techcrunch.com/category/artificial-intelligence/", summary: "OpenAIがEnterprise・Teamプランの価格を引き下げ、同時にデータ保護機能を強化。中堅企業のAI導入障壁が下がり、競合との差別化がより難しくなる可能性がある。", learn: "ChatGPT EnterpriseとClaude for Workの比較表を作り、社内提案シーンで使えるように準備する" },
+      { title: "Cursor、非エンジニア利用が急増", importance: "中", topic: "AI開発ツール", date: "2026年4月22日", source: "The Verge", source_url: "https://www.theverge.com/ai-artificial-intelligence", summary: "AIコーディングツールのユーザー層が急速に拡大。プログラミング未経験のビジネスパーソンがノーコード感覚でツールを使い始めており、このアプリ開発もその好例。", learn: "Cursorの無料プランを試し、日常業務の小さなツール自作に挑戦してみる" },
+      { title: "EU AI Act、8月から高リスクAIへ適用", importance: "中", topic: "規制・倫理", date: "2026年4月22日", source: "日本経済新聞", source_url: "https://www.nikkei.com/topic/AI", summary: "EU AI Actの段階的施行スケジュールが確定。採用・人事・与信などの高リスク用途は8月から規制対象に。グローバル展開を視野に入れる企業は今から対応検討が必要。", learn: "自社・提案先のAI活用が規制対象に該当するか確認する判断基準を把握しておく" },
+      { title: "大手商社、AIで定型業務45%削減", importance: "中", topic: "AI×ビジネス", date: "2026年4月21日", source: "ITmedia", source_url: "https://www.itmedia.co.jp/news/subtop/aiplus/", summary: "国内大手商社がAIエージェントを導入し定型業務の45%を自動化したと発表。市場調査・レポート作成・社内承認フローの効率化が顕著で、BizDev職種への影響が大きい。", learn: "自分の日常業務リストを作り、AIで代替できるタスクをリストアップして上司と共有する" },
+      { title: "Meta、LLaMA 4を正式リリース", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Meta AI Blog", source_url: "https://ai.meta.com/blog/", summary: "MetaがオープンソースLLM「LLaMA 4」を正式公開。前世代より推論速度が2倍向上し、商用利用も無償で可能。OpenAI・Anthropicへの対抗軸として企業の選択肢が広がる。", learn: "LLaMA 4の商用利用条件を確認し、自社サービスへの組み込みコスト試算を行う" },
+      { title: "Microsoft Copilot、Excel自動化を強化", importance: "中", topic: "AI開発ツール", date: "2026年4月23日", source: "Microsoft Blog", source_url: "https://blogs.microsoft.com/", summary: "Microsoft CopilotがExcelの高度な自動化機能を追加。複雑な集計・グラフ作成・レポート生成をチャットで指示できるようになり、ビジネス現場での活用が一気に広がる見込み。", learn: "日常のExcel作業をCopilotに任せるワークフローを試し、週次レポート作成の時間を計測してみる" },
+      { title: "Apple、iOS 19でAI機能を大幅拡充", importance: "中", topic: "AI×ビジネス", date: "2026年4月22日", source: "The Verge", source_url: "https://www.theverge.com/apple", summary: "AppleがiOS 19でオンデバイスAI処理を強化すると発表。プライバシーを保ちながらメール・メモ・カレンダーをAIが自動整理する機能が追加される予定で、個人生産性が向上する。", learn: "iOS 19リリース後にApple Intelligenceの業務活用方法を調査し、チームへの導入を検討する" },
+      { title: "Google Gemini 2.5、コーディング精度で首位", importance: "高", topic: "LLM・基盤モデル", date: "2026年4月24日", source: "Google DeepMind", source_url: "https://deepmind.google/", summary: "GoogleのGemini 2.5がコーディングベンチマークでGPT-4oを上回り首位を獲得。特に長いコンテキストの理解と多言語対応が評価されており、開発者向けツールとしての採用が加速している。", learn: "現在利用しているAIツールとGemini 2.5を比較し、用途別に最適なモデルを使い分けるガイドを作成する" },
+      { title: "X（旧Twitter）、Grok 3を企業向け提供開始", importance: "中", topic: "AI×ビジネス", date: "2026年4月23日", source: "Reuters", source_url: "https://www.reuters.com/technology/artificial-intelligence/", summary: "XがGrok 3の企業向けAPIを正式公開。リアルタイムのX上のデータを学習に活用できる点が特徴で、SNSマーケティング・トレンド分析・BizDev情報収集での活用が期待されている。", learn: "Grok 3のAPIを使ったSNSトレンド分析ツールの可能性を検討し、自社のマーケティング戦略に組み込めるか試算する" }
+    ],
+    learningRecommendations: [
+      "「AIエージェント」を30分で理解する：AutoGPT・Claude Agent・ChatGPT Actionsの違いを図解でキャッチアップ",
+      "EU AI Actの要点を1枚にまとめる：採用・営業・BizDev領域への影響を整理し、社内共有できる資料を作成",
+      "このアプリをGitHubで公開する：実装経験が「AIを使いこなせるBizDev人材」の証明になる"
+    ]
+  };
+
+  // APIリクエスト共通関数
+  async function callAPI(apiKey, messages, useWebSearch) {
+    const body = {
+      model: 'claude-sonnet-4-5',
+      max_tokens: 4000,
+      messages
+    };
+    if (useWebSearch) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `APIエラー (${res.status})`);
+    }
+    return res.json();
+  }
+
+  // テキストブロック抽出
+  function extractText(data) {
+    const block = data.content.filter(b => b.type === 'text').pop();
+    return block ? block.text.trim() : '';
+  }
+
+  // JSON安全パース
+  function safeParseJSON(raw) {
+    let str = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+    if (!str.startsWith('{')) {
+      const m = str.match(/\{[\s\S]*\}/);
+      if (m) str = m[0];
+      else throw new Error('JSONの解析に失敗しました');
+    }
+    return JSON.parse(str);
+  }
+
+  async function fetchBrief() {
+    clearError();
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    const isDemo = !apiKey || apiKey === 'demo';
+    const topics = getTopics();
+    if (topics.length === 0) { showError('トピックを1つ以上選択してください。'); return; }
+
+    document.getElementById('emptyState').style.display = 'none';
+    setLoading(true, isDemo);
+
+    if (isDemo) {
+      await new Promise(r => setTimeout(r, 1600));
+      renderResults(DEMO_DATA, true);
+      return;
+    }
+
+    const today = now.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
+
+    try {
+      // ── STEP 1: Web検索でニュース記事を収集 ──
+      document.getElementById('loadingText').textContent = '🔍 Web検索でAIニュースを収集中...';
+      document.getElementById('loadingSub').textContent = '最新記事を探しています（約30秒）';
+
+      const searchPrompt = `今日（${today}）と昨日の2日間に公開された最新AIニュースをWeb検索で10件収集してください。
+
+優先順位：
+1. Anthropic・OpenAI・Google（Gemini）のニュース
+2. Meta・Microsoft・Apple・Amazon・XのAIニュース
+3. その他AI業界の重要ニュース
+
+各記事について以下を調べてください：タイトル、URL、公開日、メディア名、記事の内容
+
+同じ出来事のニュースは1件だけ選んでください。架空の記事は絶対に作らないでください。
+
+見つかった記事を箇条書きでまとめてください。`;
+
+      const searchData = await callAPI(apiKey, [{ role: 'user', content: searchPrompt }], true);
+      const searchResult = extractText(searchData);
+
+      if (!searchResult) throw new Error('ニュースの収集に失敗しました。再度お試しください。');
+
+      // ── STEP 2: 収集結果をJSON化 ──
+      document.getElementById('loadingText').textContent = '✍️ 要約・分析中...';
+      document.getElementById('loadingSub').textContent = 'ビジネス視点で整理しています（約20秒）';
+
+      const formatPrompt = `以下のAIニュース一覧を分析して、JSONに整形してください。
+
+【収集されたニュース】
+${searchResult}
+
+【出力形式】{ から始まり } で終わるJSONのみ返してください。前置き文章・説明・マークダウン不要：
+{
+  "summary": "今日のAI全体の動向を3〜4文で（ビジネス視点）",
+  "news": [
+    {
+      "title": "タイトル（30文字以内・日本語）",
+      "importance": "高/中/低",
+      "topic": "カテゴリ名",
+      "date": "公開日（YYYY年MM月DD日）",
+      "source": "メディア名",
+      "source_url": "記事のURL",
+      "summary": "2〜3文の要約（なぜ重要か・何が変わるか）",
+      "learn": "シゲさんの生活・仕事への影響（1〜2文・具体的に）"
+    }
+  ],
+  "learningRecommendations": ["今日学ぶべきこと（具体的なアクション）"]
+}
+newsは最大10件、learningRecommendationsは3件。必ずJSONのみ返してください。`;
+
+      const formatData = await callAPI(apiKey, [{ role: 'user', content: formatPrompt }], false);
+      const formatResult = extractText(formatData);
+      const parsed = safeParseJSON(formatResult);
+
+      renderResults(parsed, false);
+
+    } catch(e) {
+      setLoading(false);
+      const msg = e.message.includes('Failed to fetch')
+        ? '通信がタイムアウトしました。再度「ブリーフィングを生成」を押してください。'
+        : 'エラーが発生しました: ' + e.message;
+      showError(msg);
+    }
+  }
+
+  function renderResults(data, isDemo) {
+    document.getElementById('demoBadge').style.display = isDemo ? 'inline-flex' : 'none';
+    document.getElementById('summaryText').textContent = data.summary || '';
+
+    const tbody = document.getElementById('newsTableBody');
+    tbody.innerHTML = '';
+    (data.news || []).forEach((item, i) => {
+      const ic = impClass(item.importance);
+      const il = impLabel(item.importance);
+      const sourceHtml = item.source_url
+        ? `<a class="source-link" href="${item.source_url}" target="_blank" rel="noopener">🔗 ${item.source || 'リンク'}</a>`
+        : `<span class="source-plain">${item.source || '—'}</span>`;
+      const tr = document.createElement('tr');
+      tr.style.animationDelay = `${i * 0.06}s`;
+      tr.innerHTML = `
+        <td class="col-no"><span class="no-badge">${String(i+1).padStart(2,'0')}</span></td>
+        <td class="col-imp"><span class="imp-badge ${ic}">${il}</span></td>
+        <td class="col-genre"><span class="genre-tag">${item.topic || '—'}</span></td>
+        <td class="col-title"><div class="cell-title">${item.title || ''}</div></td>
+        <td class="col-summary"><div class="cell-summary">${item.summary || ''}</div></td>
+        <td class="col-date"><div class="cell-date">${item.date || '—'}</div></td>
+        <td class="col-source">${sourceHtml}</td>
+        <td class="col-impact"><div class="impact-box">💼 ${item.learn || ''}</div></td>`;
+      tbody.appendChild(tr);
+    });
+
+    const list = document.getElementById('learningList');
+    list.innerHTML = '';
+    (data.learningRecommendations || []).forEach((item, i) => {
+      list.innerHTML += `<li class="learning-item"><span class="learning-num">${i+1}</span><span>${item}</span></li>`;
+    });
+
+    setLoading(false);
+    document.getElementById('results').style.display = 'flex';
+    document.getElementById('results').style.flexDirection = 'column';
+  }
+</script>
+</body>
+</html>
